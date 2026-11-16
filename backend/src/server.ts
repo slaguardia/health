@@ -71,7 +71,7 @@ const MARKER = ["name", "panel", "unit", "notes", "sort"];
 const RESULT = ["drawn_on", "lab", "marker_id", "name_on_report", "value", "value_text", "unit", "ref_low", "ref_high", "ref_text", "flag", "document_id", "notes"];
 const DOCUMENT = ["doc_date", "type", "issuer", "description", "applied_to", "notes", "added_at"];
 const SOURCE_KINDS = ["label", "usda", "web", "manual"];
-const SUPPLEMENT = ["name", "brand", "dose", "timing", "frequency", "directions", "purpose", "recommended_by", "bought_from", "status", "started_on", "stopped_on", "notes"];
+const SUPPLEMENT = ["name", "brand", "dose", "timing", "frequency", "directions", "purpose", "recommended_by", "bought_from", "status", "started_on", "stopped_on", "notes", "url", "plan_product", "plan_url"];
 const TIMINGS = ["waking", "breakfast", "midday", "dinner", "bedtime", "apart", "anytime"];
 const STATUSES = ["taking", "planned", "stopped"];
 
@@ -81,6 +81,7 @@ function supplementFields(body: any): Record<string, unknown> {
   if (f.timing != null && !TIMINGS.includes(f.timing as string)) throw new Bad(`timing must be one of ${TIMINGS.join(", ")}`);
   if (f.status != null && !STATUSES.includes(f.status as string)) throw new Bad(`status must be one of ${STATUSES.join(", ")}`);
   for (const k of ["started_on", "stopped_on"]) if (f[k] != null) date(f[k], k);
+  for (const k of ["url", "plan_url"]) if (f[k] != null && !/^https?:\/\/\S+$/.test(String(f[k]))) throw new Bad(`${k} must be a web address starting with https://`);
   if (f.status === "stopped" && f.stopped_on === undefined) f.stopped_on = today();
   if (f.status && f.status !== "stopped" && f.stopped_on === undefined) f.stopped_on = null;
   return f;

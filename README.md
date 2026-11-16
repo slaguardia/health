@@ -38,8 +38,9 @@ is stored and backed up. Every change goes in an activity log.
   table and the names labs print for it.
 - **Supplements:** the routine by time of day (on waking, with breakfast, midday,
   with dinner, bedtime, apart from meals): each product's dose, how often,
-  directions, who recommended it, and whether it's taken, not started yet or
-  stopped. Stopped ones stay in a list below.
+  directions, who recommended it, a link to the product, and whether it's taken,
+  not started yet or stopped. When you take a different product than the plan named,
+  the plan's pick and its link stay on the row. Stopped ones stay in a list below.
 - **Documents:** upload from your phone's camera or file picker (several at once).
   Anything not yet read shows "Not filed yet" until Claude files it.
 - **Backlog:** ideas for making the dashboard better, added on the page or by
@@ -81,7 +82,7 @@ is stored and backed up. Every change goes in an activity log.
 | `targets` | nutrient, amount, `at_least` / `at_most` / `about` |
 | `markers` | a canonical test (slug, name, panel, the unit it's charted in) |
 | `marker_aliases` | the names labs print for a marker |
-| `supplements` | product, brand, dose as written, time of day, how often, directions, purpose, who recommended it, where it's bought, `taking` / `planned` / `stopped` with start and stop dates |
+| `supplements` | product, brand, dose as written, time of day, how often, directions, purpose, who recommended it, where it's bought, product link, the plan's product and link when he takes another, `taking` / `planned` / `stopped` with start and stop dates |
 | `lab_results` | date drawn, lab, marker, name as printed, value (number and as printed), unit, the report's range (numbers and as printed), the lab's flag, source document. One per marker, date and lab |
 | `documents` | dates, type, from (lab or brand), description, what it was applied to, notes, stored file |
 | `activity` | timestamped one-line summary of every change |

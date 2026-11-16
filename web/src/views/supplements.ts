@@ -42,14 +42,18 @@ const text = (s: Supplement, key: keyof Supplement, placeholder = "—") =>
   editable({ value: (s[key] as string | null) ?? "", display: (s[key] as string | null) || placeholder, empty: !s[key], save: (v) => patch(s, { [key]: v }) });
 
 const clamp = (e: HTMLElement) => (e.classList.add("fn-clamp3"), e);
+/** A small ↗ link to a product page, in a new tab. */
+const out = (href: string, label: string) => h("a", { class: "fn-supp-link", href, target: "_blank", rel: "noopener", title: label, "aria-label": label }, "↗");
 
 function routine(list: Supplement[]): HTMLElement {
   return table({
     columns: ["Product", "Dose", "When", "How often", "Directions", "Status", ""],
     rows: list.map((s) => [
       h("div", { class: "fn-supp" },
-        h("strong", {}, text(s, "name")),
-        h("small", {}, [s.brand, s.purpose, s.recommended_by && `from ${s.recommended_by}`, s.bought_from && `via ${s.bought_from}`].filter(Boolean).join(" · "))),
+        h("strong", {}, text(s, "name"), s.url ? out(s.url, `Open ${s.name}`) : null),
+        h("small", {}, [s.brand, s.purpose, s.recommended_by && `from ${s.recommended_by}`, s.bought_from && `via ${s.bought_from}`].filter(Boolean).join(" · ")),
+        s.plan_product ? h("small", { class: "fn-supp-plan" }, `Plan: ${s.plan_product}`, s.plan_url ? out(s.plan_url, `Open ${s.plan_product}`) : null) : null,
+        h("small", {}, editable({ value: s.url ?? "", display: s.url ? "Edit link" : "Add link", empty: true, placeholder: "https://…", save: (v) => patch(s, { url: v }) }))),
       text(s, "dose"),
       editable({ value: s.timing, display: WHEN.find((w) => w.value === s.timing)?.label ?? s.timing, type: "select", options: WHEN, save: (v) => patch(s, { timing: v }) }),
       text(s, "frequency"),

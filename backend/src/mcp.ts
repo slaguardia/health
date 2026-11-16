@@ -90,6 +90,9 @@ const supplementFields = {
   bought_from: z.string().optional().describe("e.g. Fullscript"),
   status: z.enum(["taking", "planned", "stopped"]).optional().describe("planned = on the plan, not started yet"),
   started_on: DATE.optional(), stopped_on: DATE.optional(), notes: z.string().optional(),
+  url: z.string().url().optional().describe("Product page of what he takes"),
+  plan_product: z.string().optional().describe("When he takes a different product than his practitioner's plan named: the plan's product, e.g. 'O.N.E. Multivitamin (Pure Encapsulations)'"),
+  plan_url: z.string().url().optional().describe("The plan's product page"),
 };
 
 function server(): McpServer {

@@ -51,6 +51,7 @@ export type Supplement = {
   timing: "waking" | "breakfast" | "midday" | "dinner" | "bedtime" | "apart" | "anytime";
   frequency: string | null; directions: string | null; purpose: string | null; recommended_by: string | null; bought_from: string | null;
   status: "taking" | "planned" | "stopped"; started_on: string | null; stopped_on: string | null; notes: string | null; created_at: string;
+  url: string | null; plan_product: string | null; plan_url: string | null;
 };
 export type AccessKey ={ id: string; label: string; created_at: string; last_used_at: string | null };
 export type BacklogItem = { id: number; title: string; details: string | null; status: "open" | "done"; source: "dashboard" | "claude"; created_at: string; done_at: string | null };

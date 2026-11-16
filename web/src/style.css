@@ -350,3 +350,5 @@ a.fn-srclink:hover .fn-src { filter: brightness(1.2); }
 .fn-supp small { display: block; margin-top: 2px; color: var(--fg-faint); font-size: 12.5px; }
 .fn-supp-form { flex-wrap: wrap; align-items: center; }
 .fn-supp-form .fn-input { flex: 1 1 140px; width: auto; }
+.fn-supp-link { margin-left: 6px; font-weight: 600; color: var(--accent); text-decoration: none; }
+.fn-supp-plan { color: var(--fg-muted) !important; }
