@@ -174,7 +174,7 @@ td .fn-input { width: 100%; max-width: 14em; padding: 5px 8px; }
   .cap-layout { grid-template-columns: 1fr; }
   .cap-side { position: static; max-height: none; overflow: visible; flex-direction: row; align-items: center; border-right: none;
     border-bottom: 1px solid var(--hairline); padding: max(12px, env(safe-area-inset-top)) 16px 12px; }
-  .cap-nav-vert { position: fixed; z-index: 30; left: 0; right: 0; bottom: 0; display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 2px;
+  .cap-nav-vert { position: fixed; z-index: 30; left: 0; right: 0; bottom: 0; display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 2px;
     padding: 6px max(6px, env(safe-area-inset-left)) max(8px, env(safe-area-inset-bottom)); background: var(--bg); border-top: 1px solid var(--hairline); }
   .cap-nav-vert a { flex-direction: column; justify-content: center; gap: 4px; padding: 7px 0 6px; font-size: 10.5px; font-weight: 600; text-align: center; border-radius: 12px; letter-spacing: -0.01em; overflow: hidden; }
   .cap-nav-vert a span[data-short] { font-size: 0; }
@@ -343,3 +343,10 @@ a.fn-srclink:hover .fn-src { filter: brightness(1.2); }
   .fn-entry .fn-x { grid-column: 2; grid-row: 1; }
   .fn-quickfood { flex: 1 1 100%; }
 }
+
+/* Supplements */
+.fn-supp { min-width: 18ch; }
+.fn-supp strong { display: block; font-weight: 600; color: var(--fg); }
+.fn-supp small { display: block; margin-top: 2px; color: var(--fg-faint); font-size: 12.5px; }
+.fn-supp-form { flex-wrap: wrap; align-items: center; }
+.fn-supp-form .fn-input { flex: 1 1 140px; width: auto; }

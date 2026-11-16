@@ -2,7 +2,8 @@
 // header) or /mcp/<key> (for claude.ai, whose custom connectors can't send a
 // header). The edge lets /mcp through without the Google login, so the key is
 // the only lock. Tools read the record, make safe edits (log food, save foods
-// with their sources, set targets, record lab results), file documents the chat
+// with their sources, set targets, record lab results, keep the supplement
+// routine), file documents the chat
 // was shown into the catalog, and keep the app's backlog. Nothing here deletes,
 // and stored files never leave: a leaked key must not hand over lab reports.
 // Each tool calls this app's own /api, so writes get the same checks, activity
@@ -77,6 +78,20 @@ const RESULT = z.object({
   notes: z.string().optional(),
 });
 
+const supplementFields = {
+  brand: z.string().optional(),
+  dose: z.string().optional().describe("As written, e.g. '2 softgels', '1 scoop (10–20 g)'"),
+  timing: z.enum(["waking", "breakfast", "midday", "dinner", "bedtime", "apart", "anytime"]).optional()
+    .describe("waking = on waking, before breakfast; apart = away from meals; anytime = no set time"),
+  frequency: z.string().optional().describe("e.g. 'Daily', 'Every other day'"),
+  directions: z.string().optional().describe("How to take it, e.g. 'empty stomach, 2 h from coffee'"),
+  purpose: z.string().optional(),
+  recommended_by: z.string().optional(),
+  bought_from: z.string().optional().describe("e.g. Fullscript"),
+  status: z.enum(["taking", "planned", "stopped"]).optional().describe("planned = on the plan, not started yet"),
+  started_on: DATE.optional(), stopped_on: DATE.optional(), notes: z.string().optional(),
+};
+
 function server(): McpServer {
   const s = new McpServer({ name: "health", version: "1.0.0" }, {
     instructions:
@@ -96,7 +111,9 @@ function server(): McpServer {
       "4. mark_document_filed with exactly what it changed (e.g. 'Food #12 Chobani Greek yogurt: 11 values from label' or '24 results from Quest, 2026-10-14; 2 outside range: LDL, vitamin D').\n" +
       "5. Tell him in a few lines what it was and what changed; for labs, list any result outside its printed range and how it compares to the last time that marker was drawn.\n\n" +
       "Logging food: list_foods (or get_overview's recent_foods) for the id, then log_food with servings (convert grams with serving_grams). Not saved yet? Find the values (label, USDA or the maker's page), add_food with its source, then log it. " +
-      "Targets are Steven's own; only set_target when he gives you a number.",
+      "Targets are Steven's own; only set_target when he gives you a number.\n\n" +
+      "Supplements: list_supplements is the routine he and his practitioner set, grouped by time of day. Record changes he tells you about with add_supplement or update_supplement " +
+      "(status 'stopped' when he stops one, so the history stays); copy doses and directions as he or the plan words them.",
   });
 
   // --- reads ---
@@ -211,6 +228,20 @@ function server(): McpServer {
       results: z.array(RESULT).min(1),
     },
   }, (a) => reply(api("PUT", "/api/labs", defined(a))));
+
+  // --- supplements ---
+  s.registerTool("list_supplements", {
+    description: "His supplement routine: each product with dose, time of day, how often, directions, why, who recommended it, where he buys it, and whether he's taking it, plans to, or stopped.",
+    annotations: { readOnlyHint: true },
+  }, () => reply(api("GET", "/api/supplements")));
+  s.registerTool("add_supplement", {
+    description: "Add a supplement to his routine. list_supplements first to avoid duplicates.",
+    inputSchema: { name: z.string().min(1), ...supplementFields },
+  }, (a) => reply(api("POST", "/api/supplements", defined(a))));
+  s.registerTool("update_supplement", {
+    description: "Change a supplement's dose, timing, directions or status. Set status 'stopped' when he stops one (the stop date defaults to today).",
+    inputSchema: { id: z.number().int(), name: z.string().optional(), ...supplementFields },
+  }, ({ id, ...rest }) => reply(api("PATCH", `/api/supplements/${id}`, defined(rest))));
 
   // --- documents: the catalog, never the stored files ---
   s.registerTool("list_documents", {

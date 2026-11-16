@@ -46,7 +46,13 @@ export type Doc = {
   applied_to: string | null; notes: string | null; file_name: string | null; mime: string | null; size: number | null;
   lab_results: number; food_ids: string | null;
 };
-export type AccessKey = { id: string; label: string; created_at: string; last_used_at: string | null };
+export type Supplement = {
+  id: number; name: string; brand: string | null; dose: string | null;
+  timing: "waking" | "breakfast" | "midday" | "dinner" | "bedtime" | "apart" | "anytime";
+  frequency: string | null; directions: string | null; purpose: string | null; recommended_by: string | null; bought_from: string | null;
+  status: "taking" | "planned" | "stopped"; started_on: string | null; stopped_on: string | null; notes: string | null; created_at: string;
+};
+export type AccessKey ={ id: string; label: string; created_at: string; last_used_at: string | null };
 export type BacklogItem = { id: number; title: string; details: string | null; status: "open" | "done"; source: "dashboard" | "claude"; created_at: string; done_at: string | null };
 
 async function j<T>(r: Response): Promise<T> {
@@ -71,6 +77,7 @@ export const api = {
   documents: () => get<{ documents: Doc[] }>("/api/documents").then((d) => d.documents),
   activity: () => get<{ activity: Activity[] }>("/api/activity").then((d) => d.activity),
   keys: () => get<{ keys: AccessKey[] }>("/api/keys").then((d) => d.keys),
+  supplements: () => get<{ supplements: Supplement[] }>("/api/supplements").then((d) => d.supplements),
   backlog: () => get<{ backlog: BacklogItem[] }>("/api/backlog").then((d) => d.backlog),
   backups: () => get<{ backups: { name: string; size: number }[] }>("/api/backups").then((d) => d.backups),
   log: (b: { food_id: number; servings: number; date: string; meal?: Meal | null }) => send<{ id: number }>("POST", "/api/log", b),

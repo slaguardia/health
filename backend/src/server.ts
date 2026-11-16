@@ -71,6 +71,24 @@ const MARKER = ["name", "panel", "unit", "notes", "sort"];
 const RESULT = ["drawn_on", "lab", "marker_id", "name_on_report", "value", "value_text", "unit", "ref_low", "ref_high", "ref_text", "flag", "document_id", "notes"];
 const DOCUMENT = ["doc_date", "type", "issuer", "description", "applied_to", "notes", "added_at"];
 const SOURCE_KINDS = ["label", "usda", "web", "manual"];
+const SUPPLEMENT = ["name", "brand", "dose", "timing", "frequency", "directions", "purpose", "recommended_by", "bought_from", "status", "started_on", "stopped_on", "notes"];
+const TIMINGS = ["waking", "breakfast", "midday", "dinner", "bedtime", "apart", "anytime"];
+const STATUSES = ["taking", "planned", "stopped"];
+
+/** Check a supplement's fields; stopping one without a date stops it today. */
+function supplementFields(body: any): Record<string, unknown> {
+  const f = pick(body, SUPPLEMENT);
+  if (f.timing != null && !TIMINGS.includes(f.timing as string)) throw new Bad(`timing must be one of ${TIMINGS.join(", ")}`);
+  if (f.status != null && !STATUSES.includes(f.status as string)) throw new Bad(`status must be one of ${STATUSES.join(", ")}`);
+  for (const k of ["started_on", "stopped_on"]) if (f[k] != null) date(f[k], k);
+  if (f.status === "stopped" && f.stopped_on === undefined) f.stopped_on = today();
+  if (f.status && f.status !== "stopped" && f.stopped_on === undefined) f.stopped_on = null;
+  return f;
+}
+const supplementName = (id: unknown) => {
+  const s = db().prepare("SELECT name, brand FROM supplements WHERE id=?").get(id) as { name: string; brand: string | null } | undefined;
+  return s ? (s.brand ? `${s.name} (${s.brand})` : s.name) : `supplement #${id}`;
+};
 
 const foodName = (id: unknown) => {
   const f = db().prepare("SELECT name, brand FROM foods WHERE id=?").get(id) as { name: string; brand: string | null } | undefined;
@@ -362,6 +380,28 @@ export function createApp() {
     if (!r) throw new Bad("lab result not found");
     db().prepare("DELETE FROM lab_results WHERE id=?").run(req.params.id);
     changed(`Removed ${r.marker_id} result from ${r.drawn_on}`);
+    res.json({ ok: true });
+  }));
+
+  // --- supplements: the routine, by time of day ---
+  app.get("/api/supplements", (_req, res) => res.json({ supplements: db().prepare("SELECT * FROM supplements ORDER BY id").all() }));
+  app.post("/api/supplements", wrap((req, res) => {
+    need(req.body.name, "name");
+    const id = insert("supplements", supplementFields(req.body));
+    changed(`Added supplement ${supplementName(id)}`);
+    res.status(201).json({ id });
+  }));
+  app.patch("/api/supplements/:id", wrap((req, res) => {
+    const fields = supplementFields(req.body);
+    update("supplements", "id", req.params.id, fields);
+    changed(fields.status === "stopped" ? `Stopped ${supplementName(req.params.id)}` : `Updated ${supplementName(req.params.id)}: ${describe(fields)}`);
+    res.json({ ok: true });
+  }));
+  app.delete("/api/supplements/:id", wrap((req, res) => {
+    const name = supplementName(req.params.id);
+    const r = db().prepare("DELETE FROM supplements WHERE id=?").run(req.params.id);
+    if (!r.changes) throw new Bad("supplement not found");
+    changed(`Removed supplement ${name}`);
     res.json({ ok: true });
   }));
 
