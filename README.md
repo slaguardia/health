@@ -36,7 +36,8 @@ is stored and backed up. Every change goes in an activity log.
   printed on each result's own report (labs differ, so the band can shift from
   draw to draw); results outside it are flagged. Each marker's page has the full
   table and the names labs print for it.
-- **Supplements:** the routine by time of day (on waking, with breakfast, midday,
+- **Supplements:** each practitioner's plan as written (her pick, dose and link,
+  and what you take in its place), then the routine by time of day (on waking, with breakfast, midday,
   with dinner, bedtime, apart from meals): each product's dose, how often,
   directions, who recommended it, a link to the product, and whether it's taken,
   not started yet or stopped. When you take a different product than the plan named,

@@ -352,3 +352,15 @@ a.fn-srclink:hover .fn-src { filter: brightness(1.2); }
 .fn-supp-form .fn-input { flex: 1 1 140px; width: auto; }
 .fn-supp-link { margin-left: 6px; font-weight: 600; color: var(--accent); text-decoration: none; }
 .fn-supp-plan { color: var(--fg-muted) !important; }
+/* every routine table gets the same columns, so they line up from one time of day to the next */
+.fn-supp-table .tk-table { table-layout: fixed; width: 100%; min-width: 760px; }
+.fn-supp-table .tk-table td { vertical-align: top; }
+.fn-supp-routine th:nth-child(1) { width: 30%; }
+.fn-supp-routine th:nth-child(2) { width: 11%; }
+.fn-supp-routine th:nth-child(3) { width: 12%; }
+.fn-supp-routine th:nth-child(4) { width: 10%; }
+.fn-supp-routine th:nth-child(6) { width: 11%; }
+.fn-supp-routine th:nth-child(7) { width: 36px; }
+.fn-supp-table:not(.fn-supp-routine) .tk-table { min-width: 560px; }
+.fn-supp-table:not(.fn-supp-routine) th:nth-child(1) { width: 50%; }
+.fn-supp-table:not(.fn-supp-routine) th:nth-child(2) { width: 18%; }

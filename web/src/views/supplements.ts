@@ -25,6 +25,7 @@ export const SupplementsView = (): View => ({
     const stopped = all.filter((s) => s.status === "stopped");
     el.replaceChildren(
       pageHead("Supplements", "What you take and when, by time of day. Add one here, or tell Claude in any chat that has your access key."),
+      ...plans(current),
       ...WHEN.map((w) => {
         const rows = current.filter((s) => s.timing === w.value);
         return rows.length ? section(w.label, routine(rows)) : "";
@@ -45,13 +46,30 @@ const clamp = (e: HTMLElement) => (e.classList.add("fn-clamp3"), e);
 /** A small ↗ link to a product page, in a new tab. */
 const out = (href: string, label: string) => h("a", { class: "fn-supp-link", href, target: "_blank", rel: "noopener", title: label, "aria-label": label }, "↗");
 
+/** Each practitioner's plan as written: her pick and dose with its link, and what's taken in its place. */
+function plans(list: Supplement[]): HTMLElement[] {
+  const by = new Map<string, Supplement[]>();
+  for (const s of list) if (s.recommended_by) by.set(s.recommended_by, [...(by.get(s.recommended_by) ?? []), s]);
+  const slot = (s: Supplement) => WHEN.findIndex((w) => w.value === s.timing);
+  return [...by].map(([who, items]) => section(`${who}'s plan`, h("div", { class: "fn-supp-table" }, table({
+    columns: ["Recommended", "When", "What you take"],
+    rows: items.sort((a, b) => slot(a) - slot(b)).map((s) => [
+      s.plan_product
+        ? h("span", {}, s.plan_product, s.plan_url ? out(s.plan_url, `Open ${s.plan_product}`) : null)
+        : h("span", {}, [`${s.name}${s.brand ? ` (${s.brand})` : ""}`, s.dose, s.frequency?.toLowerCase()].filter(Boolean).join(", "), s.url ? out(s.url, `Open ${s.name}`) : null),
+      WHEN.find((w) => w.value === s.timing)?.label ?? s.timing,
+      s.plan_product ? `${s.name}${s.brand ? ` (${s.brand})` : ""} instead` : s.status === "planned" ? "Not started" : "As recommended",
+    ]),
+  }))));
+}
+
 function routine(list: Supplement[]): HTMLElement {
-  return table({
+  return h("div", { class: "fn-supp-table fn-supp-routine" }, table({
     columns: ["Product", "Dose", "When", "How often", "Directions", "Status", ""],
     rows: list.map((s) => [
       h("div", { class: "fn-supp" },
         h("strong", {}, text(s, "name"), s.url ? out(s.url, `Open ${s.name}`) : null),
-        h("small", {}, [s.brand, s.purpose, s.recommended_by && `from ${s.recommended_by}`, s.bought_from && `via ${s.bought_from}`].filter(Boolean).join(" · ")),
+        h("small", {}, [s.brand, s.purpose, s.recommended_by && !s.plan_product && `from ${s.recommended_by}`, s.bought_from && `via ${s.bought_from}`].filter(Boolean).join(" · ")),
         s.plan_product ? h("small", { class: "fn-supp-plan" }, `Plan: ${s.plan_product}`, s.plan_url ? out(s.plan_url, `Open ${s.plan_product}`) : null) : null,
         h("small", {}, editable({ value: s.url ?? "", display: s.url ? "Edit link" : "Add link", empty: true, placeholder: "https://…", save: (v) => patch(s, { url: v }) }))),
       text(s, "dose"),
@@ -64,7 +82,7 @@ function routine(list: Supplement[]): HTMLElement {
           : s.started_on ? h("small", { class: "fn-sub" }, `since ${day(s.started_on)}`) : null),
       removeBtn(`${s.name} from your supplements`, () => send("DELETE", `/api/supplements/${s.id}`)),
     ]),
-  });
+  }));
 }
 
 function addForm(): HTMLElement {
