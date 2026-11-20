@@ -39,7 +39,7 @@ is stored and backed up. Every change goes in an activity log.
   theirs. Each marker's page has general background on the test (what it
   measures, how much is inherited, what it's read with, published cutoffs, with
   sources), the full table and the names labs print for it.
-- **Supplements:** each practitioner's plan as written (her pick, dose and link,
+- **Supplements:** each practitioner's plan as written (their pick, dose and link,
   and what you take in its place), then the routine by time of day (on waking, with breakfast, midday,
   with dinner, bedtime, apart from meals): each product's dose, how often,
   directions, who recommended it, a link to the product, and whether it's taken,
@@ -86,7 +86,7 @@ is stored and backed up. Every change goes in an activity log.
 | `targets` | nutrient, amount, `at_least` / `at_most` / `about` |
 | `markers` | a canonical test (slug, name, panel, the unit it's charted in) |
 | `marker_aliases` | the names labs print for a marker |
-| `supplements` | product, brand, dose as written, time of day, how often, directions, purpose, who recommended it, where it's bought, product link, the plan's product and link when he takes another, `taking` / `planned` / `stopped` with start and stop dates |
+| `supplements` | product, brand, dose as written, time of day, how often, directions, purpose, who recommended it, where it's bought, product link, the plan's product and link when another is taken, `taking` / `planned` / `stopped` with start and stop dates |
 | `lab_results` | date drawn, lab, marker, name as printed, value (number and as printed), unit, the report's range (numbers and as printed), the lab's flag, source document. One per marker, date and lab |
 | `documents` | dates, type, from (lab or brand), description, what it was applied to, notes, stored file |
 | `activity` | timestamped one-line summary of every change |

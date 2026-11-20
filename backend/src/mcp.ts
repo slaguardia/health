@@ -50,7 +50,7 @@ async function unfiled(id: number): Promise<void> {
 const DATE = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "YYYY-MM-DD");
 const MEAL = z.enum(["breakfast", "lunch", "dinner", "snack"]);
 const SOURCE = z.object({
-  kind: z.enum(["label", "usda", "web", "manual"]).describe("label = a nutrition-label photo; usda = USDA FoodData Central; web = a web page; manual = Steven told you"),
+  kind: z.enum(["label", "usda", "web", "manual"]).describe("label = a nutrition-label photo; usda = USDA FoodData Central; web = a web page; manual = the owner told you"),
   document_id: z.number().int().optional().describe("label: the catalog entry of the photo"),
   fdc_id: z.string().optional().describe("usda: the FoodData Central id"),
   url: z.string().url().optional().describe("web: the page the values came from"),
@@ -90,21 +90,21 @@ const supplementFields = {
   bought_from: z.string().optional().describe("e.g. Fullscript"),
   status: z.enum(["taking", "planned", "stopped"]).optional().describe("planned = on the plan, not started yet"),
   started_on: DATE.optional(), stopped_on: DATE.optional(), notes: z.string().optional(),
-  url: z.string().url().optional().describe("Product page of what he takes"),
-  plan_product: z.string().optional().describe("When he takes a different product than his practitioner's plan named: the plan's product, e.g. 'O.N.E. Multivitamin (Pure Encapsulations)'"),
+  url: z.string().url().optional().describe("Product page of what they take"),
+  plan_product: z.string().optional().describe("When they take a different product than their practitioner's plan named: the plan's product, e.g. 'O.N.E. Multivitamin (Pure Encapsulations)'"),
   plan_url: z.string().url().optional().describe("The plan's product page"),
 };
 
 function server(): McpServer {
   const s = new McpServer({ name: "health", version: "1.0.0" }, {
     instructions:
-      "Steven's personal health record: what he eats (foods with per-serving nutrients, a daily food log, targets he sets) and his bloodwork over time. " +
-      "Dates are YYYY-MM-DD in his local time. Read before you write, and say what you changed. Every edit shows up in the dashboard's Log, tagged via Claude. " +
-      "This record tracks; it does not diagnose. Report values against the lab's own printed range and say when one is outside it. General, sourced background about a test is fine (what it measures, how much is inherited, which markers it's read with, published guideline cutoffs, citing the source), but give no verdict on his results; for that, suggest he ask his doctor. " +
+      "A personal health record: what its owner eats (foods with per-serving nutrients, a daily food log, targets they set), their supplements and their bloodwork over time. " +
+      "Dates are YYYY-MM-DD in their local time. Read before you write, and say what you changed. Every edit shows up in the dashboard's Log, tagged via Claude. " +
+      "This record tracks; it does not diagnose. Report values against the lab's own printed range and say when one is outside it. General, sourced background about a test is fine (what it measures, how much is inherited, which markers it's read with, published guideline cutoffs, citing the source), but give no verdict on their results; for that, suggest they ask their doctor. " +
       "Ideas for improving the dashboard itself go on its backlog (add_backlog_item).\n\n" +
-      "Filing a document Steven shows you (a nutrition-label photo or a lab report, PDF or photo):\n" +
-      "1. Read it fully. Never write his name, date of birth, address, MRN, account or accession numbers anywhere.\n" +
-      "2. list_documents with unfiled_only: he uploads originals on the dashboard's Documents page, so match the file you were shown by file name and date and use that id; if none matches, catalog_document without id adds an entry with no file (tell him to upload the original). " +
+      "Filing a document the owner shows you (a nutrition-label photo or a lab report, PDF or photo):\n" +
+      "1. Read it fully. Never write their name, date of birth, address, MRN, account or accession numbers anywhere.\n" +
+      "2. list_documents with unfiled_only: they upload originals on the dashboard's Documents page, so match the file you were shown by file name and date and use that id; if none matches, catalog_document without id adds an entry with no file (ask them to upload the original). " +
       "catalog_document with type ('Nutrition label' or 'Lab report'), issuer (the brand, or the lab: Quest, Labcorp…), doc_date (date drawn, or the day of the photo) and a short description.\n" +
       "3a. Nutrition label: list_foods with a search first; if the food exists, update_food, else add_food. Give name, brand, serving_size as printed, serving_grams, and every nutrient the label lists, per serving, in the nutrient's unit, with source {kind:'label', document_id}. " +
       "If the label lists a nutrient not in list_nutrients, add_nutrient first. A value printed only as %DV: convert with the FDA daily value and say so in the source note. " +
@@ -112,16 +112,16 @@ function server(): McpServer {
       "3b. Lab report: list_markers. Every result needs a canonical marker so the same test lines up across labs: reuse a marker when the test is the same (add_marker_alias for a new printed name, e.g. 'LDL Chol Calc (NIH)' → ldl-cholesterol); add_marker only for a test not on file. " +
       "Then record_lab_results once for the whole report with drawn_on (the collection date, not the report date), lab, document_id, and for each result: name_on_report as printed, value, unit, the printed reference range (ref_low/ref_high and ref_text) and any flag the lab printed. Copy values exactly; don't convert units.\n" +
       "4. mark_document_filed with exactly what it changed (e.g. 'Food #12 Chobani Greek yogurt: 11 values from label' or '24 results from Quest, 2026-10-14; 2 outside range: LDL, vitamin D').\n" +
-      "5. Tell him in a few lines what it was and what changed; for labs, list any result outside its printed range and how it compares to the last time that marker was drawn.\n\n" +
+      "5. Tell them in a few lines what it was and what changed; for labs, list any result outside its printed range and how it compares to the last time that marker was drawn.\n\n" +
       "Logging food: list_foods (or get_overview's recent_foods) for the id, then log_food with servings (convert grams with serving_grams). Not saved yet? Find the values (label, USDA or the maker's page), add_food with its source, then log it. " +
-      "Targets are Steven's own; only set_target when he gives you a number.\n\n" +
-      "Supplements: list_supplements is the routine he and his practitioner set, grouped by time of day. Record changes he tells you about with add_supplement or update_supplement " +
-      "(status 'stopped' when he stops one, so the history stays); copy doses and directions as he or the plan words them.",
+      "Targets are the owner's own; only set_target when they give you a number.\n\n" +
+      "Supplements: list_supplements is the routine they and their practitioner set, grouped by time of day. Record changes they tell you about with add_supplement or update_supplement " +
+      "(status 'stopped' when they stop one, so the history stays); copy doses and directions as they or the plan word them.",
   });
 
   // --- reads ---
   s.registerTool("get_overview", {
-    description: "Start here. Today's intake against his targets, the last 7 days' average, foods he logs most (for quick re-logging), the latest lab draw with anything outside its printed range, and how many uploaded documents aren't filed yet.",
+    description: "Start here. Today's intake against their targets, the last 7 days' average, foods they log most (for quick re-logging), the latest lab draw with anything outside its printed range, and how many uploaded documents aren't filed yet.",
     inputSchema: { date: DATE.optional().describe("Another day instead of today") },
     annotations: { readOnlyHint: true },
   }, ({ date }) => reply(api("GET", `/api/overview${date ? `?date=${date}` : ""}`)));
@@ -131,7 +131,7 @@ function server(): McpServer {
     annotations: { readOnlyHint: true },
   }, ({ date }) => reply(api("GET", `/api/day/${date}`)));
   s.registerTool("get_nutrition_trends", {
-    description: "Daily totals for every logged day in a window (days with nothing logged are left out), plus the average over logged days and his targets.",
+    description: "Daily totals for every logged day in a window (days with nothing logged are left out), plus the average over logged days and their targets.",
     inputSchema: { days: z.number().int().min(1).max(730).optional().describe("Window length, default 30"), end: DATE.optional() },
     annotations: { readOnlyHint: true },
   }, ({ days, end }) => reply(api("GET", `/api/trends?days=${days ?? 30}${end ? `&end=${end}` : ""}`)));
@@ -206,7 +206,7 @@ function server(): McpServer {
     },
   }, (a) => reply(api("POST", "/api/nutrients", a)));
   s.registerTool("set_target", {
-    description: "Set one of Steven's daily targets, only with a number he gave you. direction: at_least (protein, fiber), at_most (sodium, added sugar), about (calories).",
+    description: "Set one of the owner's daily targets, only with a number they gave you. direction: at_least (protein, fiber), at_most (sodium, added sugar), about (calories).",
     inputSchema: { nutrient: z.string().describe("Nutrient key"), amount: z.number().min(0), direction: z.enum(["at_least", "at_most", "about"]) },
   }, ({ nutrient, ...rest }) => reply(api("PUT", `/api/targets/${encodeURIComponent(nutrient)}`, rest)));
   s.registerTool("add_marker", {
@@ -234,15 +234,15 @@ function server(): McpServer {
 
   // --- supplements ---
   s.registerTool("list_supplements", {
-    description: "His supplement routine: each product with dose, time of day, how often, directions, why, who recommended it, where he buys it, and whether he's taking it, plans to, or stopped.",
+    description: "The supplement routine: each product with dose, time of day, how often, directions, why, who recommended it, where it's bought, and whether it's being taken, planned, or stopped.",
     annotations: { readOnlyHint: true },
   }, () => reply(api("GET", "/api/supplements")));
   s.registerTool("add_supplement", {
-    description: "Add a supplement to his routine. list_supplements first to avoid duplicates.",
+    description: "Add a supplement to the routine. list_supplements first to avoid duplicates.",
     inputSchema: { name: z.string().min(1), ...supplementFields },
   }, (a) => reply(api("POST", "/api/supplements", defined(a))));
   s.registerTool("update_supplement", {
-    description: "Change a supplement's dose, timing, directions or status. Set status 'stopped' when he stops one (the stop date defaults to today).",
+    description: "Change a supplement's dose, timing, directions or status. Set status 'stopped' when they stop one (the stop date defaults to today).",
     inputSchema: { id: z.number().int(), name: z.string().optional(), ...supplementFields },
   }, ({ id, ...rest }) => reply(api("PATCH", `/api/supplements/${id}`, defined(rest))));
 
@@ -255,7 +255,7 @@ function server(): McpServer {
     documents: ds.filter((d) => !unfiled_only || !d.applied_to).slice(0, limit ?? 50).map(summary),
   }))));
   s.registerTool("catalog_document", {
-    description: "Describe a document in the catalog. With id, fills in an entry not filed yet (one Steven uploaded); without, adds a new entry with no file. Returns the id to pass as document_id.",
+    description: "Describe a document in the catalog. With id, fills in an entry not filed yet (one the owner uploaded); without, adds a new entry with no file. Returns the id to pass as document_id.",
     inputSchema: {
       id: z.number().int().optional(), type: z.string().describe("'Nutrition label' or 'Lab report'"), issuer: z.string().describe("The brand, or the lab"),
       doc_date: DATE.describe("Date drawn, or the day of the photo"),

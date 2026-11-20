@@ -62,7 +62,7 @@ const clamp = (e: HTMLElement) => (e.classList.add("fn-clamp3"), e);
 /** A small ↗ link to a product page, in a new tab. */
 const out = (href: string, label: string) => h("a", { class: "fn-supp-link", href, target: "_blank", rel: "noopener", title: label, "aria-label": label }, "↗");
 
-/** Each practitioner's plan as written: her pick and dose with its link, and what's taken in its place. */
+/** Each practitioner's plan as written: the pick and dose with its link, and what's taken in its place. */
 function plans(list: Supplement[]): HTMLElement[] {
   const by = new Map<string, Supplement[]>();
   for (const s of list) if (s.recommended_by) by.set(s.recommended_by, [...(by.get(s.recommended_by) ?? []), s]);

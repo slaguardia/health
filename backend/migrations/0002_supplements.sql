@@ -1,5 +1,5 @@
--- Steven's supplement routine: each product, when in the day he takes it, and who
--- suggested it. It records the routine he and his practitioner set; it doesn't
+-- The owner's supplement routine: each product, when in the day they take it, and who
+-- suggested it. It records the routine they and their practitioner set; it doesn't
 -- recommend anything.
 CREATE TABLE supplements (
   id             INTEGER PRIMARY KEY AUTOINCREMENT,

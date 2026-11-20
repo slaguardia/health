@@ -1,4 +1,4 @@
--- health working set: what Steven eats, against targets he sets, and his lab
+-- health working set: what the owner eats, against targets they set, and their lab
 -- results over time. This database is the record. It tracks and shows the lab's
 -- own reference ranges; it doesn't interpret them.
 
