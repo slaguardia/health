@@ -86,6 +86,16 @@ function supplementFields(body: any): Record<string, unknown> {
   if (f.status && f.status !== "stopped" && f.stopped_on === undefined) f.stopped_on = null;
   return f;
 }
+const PROFILE = ["name", "about", "goals", "history", "care_team", "preferences"];
+const TODO_STATUSES = ["open", "waiting", "done"];
+/** Check a care to-do's fields; marking it done stamps when. */
+function todoFields(body: any): Record<string, unknown> {
+  const f = pick(body, ["title", "details", "due_on", "status"]);
+  if (f.due_on != null) date(f.due_on, "due_on");
+  if (f.status != null && !TODO_STATUSES.includes(f.status as string)) throw new Bad(`status must be one of ${TODO_STATUSES.join(", ")}`);
+  if (f.status !== undefined) f.done_at = f.status === "done" ? new Date().toISOString().slice(0, 19).replace("T", " ") : null;
+  return f;
+}
 const supplementName = (id: unknown) => {
   const s = db().prepare("SELECT name, brand FROM supplements WHERE id=?").get(id) as { name: string; brand: string | null } | undefined;
   return s ? (s.brand ? `${s.name} (${s.brand})` : s.name) : `supplement #${id}`;
@@ -403,6 +413,65 @@ export function createApp() {
     const r = db().prepare("DELETE FROM supplements WHERE id=?").run(req.params.id);
     if (!r.changes) throw new Bad("supplement not found");
     changed(`Removed supplement ${name}`);
+    res.json({ ok: true });
+  }));
+
+  // --- about me: the owner's own words, care to-dos and Claude's memories ---
+  const source = () => (viaClaude.getStore() ? "claude" : "dashboard");
+  app.get("/api/profile", (_req, res) => {
+    const rows = db().prepare("SELECT section, value, updated_at FROM profile").all() as { section: string; value: string; updated_at: string }[];
+    res.json({
+      profile: Object.fromEntries(rows.map((r) => [r.section, r.value])),
+      updated: Object.fromEntries(rows.map((r) => [r.section, r.updated_at])),
+      todos: db().prepare("SELECT * FROM care_todos ORDER BY status = 'done', due_on IS NULL, due_on, id").all(),
+      memories: db().prepare("SELECT * FROM memories ORDER BY id DESC").all(),
+    });
+  });
+  app.put("/api/profile/:section", wrap((req, res) => {
+    const section = req.params.section;
+    if (!PROFILE.includes(section)) throw new Bad(`section must be one of ${PROFILE.join(", ")}`);
+    const value = String(req.body.value ?? "").trim();
+    if (value) db().prepare("INSERT INTO profile (section, value) VALUES (?, ?) ON CONFLICT(section) DO UPDATE SET value=excluded.value, updated_at=datetime('now')").run(section, value);
+    else db().prepare("DELETE FROM profile WHERE section=?").run(section);
+    changed(`${value ? "Updated" : "Cleared"} About me: ${section.replace("_", " ")}`);
+    res.json({ ok: true });
+  }));
+  app.post("/api/todos", wrap((req, res) => {
+    need(req.body.title, "title");
+    const id = insert("care_todos", { ...todoFields(req.body), source: source() });
+    changed(`Added care to-do: ${req.body.title}`);
+    res.status(201).json({ id });
+  }));
+  app.patch("/api/todos/:id", wrap((req, res) => {
+    const fields = todoFields(req.body);
+    update("care_todos", "id", req.params.id, fields);
+    const t = db().prepare("SELECT title FROM care_todos WHERE id=?").get(req.params.id) as { title: string };
+    changed(fields.status === "done" ? `Done: ${t.title}` : `Updated care to-do: ${t.title}`);
+    res.json({ ok: true });
+  }));
+  app.delete("/api/todos/:id", wrap((req, res) => {
+    const t = db().prepare("SELECT title FROM care_todos WHERE id=?").get(req.params.id) as { title: string } | undefined;
+    if (!t) throw new Bad("to-do not found");
+    db().prepare("DELETE FROM care_todos WHERE id=?").run(req.params.id);
+    changed(`Removed care to-do: ${t.title}`);
+    res.json({ ok: true });
+  }));
+  app.post("/api/memories", wrap((req, res) => {
+    const text = String(need(req.body.text, "text")).trim();
+    const id = insert("memories", { text, source: source() });
+    changed(`Remembered: ${text}`);
+    res.status(201).json({ id });
+  }));
+  app.patch("/api/memories/:id", wrap((req, res) => {
+    const text = String(need(req.body.text, "text")).trim();
+    update("memories", "id", req.params.id, { text, updated_at: new Date().toISOString().slice(0, 19).replace("T", " ") });
+    changed(`Updated memory: ${text}`);
+    res.json({ ok: true });
+  }));
+  app.delete("/api/memories/:id", wrap((req, res) => {
+    const r = db().prepare("DELETE FROM memories WHERE id=?").run(req.params.id);
+    if (!r.changes) throw new Bad("memory not found");
+    changed(`Forgot memory #${req.params.id}`);
     res.json({ ok: true });
   }));
 

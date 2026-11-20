@@ -53,7 +53,10 @@ change. It only changes document entries not filed yet. Keep it that way: no
 delete tools, and no tool that returns a stored file, since a leaked key must
 not hand over lab reports. Keys live hashed in `DATA_DIR/access-keys.json`
 (`keys.ts`); the backlog of app ideas in `DATA_DIR/backlog.json` (`backlog.ts`).
-When asked "what's on the backlog", `GET /api/backlog`; mark an item done with
+About me (`/api/profile`, the `profile`, `care_todos` and `memories` tables)
+is what a chat reads first; the connector's instructions make it the owner's
+health guide within what they wrote there. Like everything personal, it lives
+only in the database, never in the repo. When asked "what's on the backlog", `GET /api/backlog`; mark an item done with
 `PATCH /api/backlog/:id '{"status":"done"}'` once it ships.
 
 ## Changing the app

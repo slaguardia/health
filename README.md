@@ -45,6 +45,10 @@ is stored and backed up. Every change goes in an activity log.
   directions, who recommended it, a link to the product, and whether it's taken,
   not started yet or stopped. When you take a different product than the plan named,
   the plan's pick and its link stay on the row. Stopped ones stay in a list below.
+- **About me:** what Claude reads first: your own words (what to call you,
+  about you, goals, health history, care team, care preferences), care to-dos
+  (to do, waiting on someone, done, with due dates) and short memories Claude
+  saved from your chats. Edit or delete any of it here.
 - **Documents:** upload from your phone's camera or file picker (several at once).
   Anything not yet read shows "Not filed yet" until Claude files it.
 - **Backlog:** ideas for making the dashboard better, added on the page or by
@@ -87,6 +91,9 @@ is stored and backed up. Every change goes in an activity log.
 | `markers` | a canonical test (slug, name, panel, the unit it's charted in) |
 | `marker_aliases` | the names labs print for a marker |
 | `supplements` | product, brand, dose as written, time of day, how often, directions, purpose, who recommended it, where it's bought, product link, the plan's product and link when another is taken, `taking` / `planned` / `stopped` with start and stop dates |
+| `profile` | the About me sections, in the owner's words: `name`, `about`, `goals`, `history`, `care_team`, `preferences` |
+| `care_todos` | title, details, due date, `open` / `waiting` / `done`, added from the dashboard or by Claude |
+| `memories` | one-sentence facts or preferences saved from chats, editable and deletable on the dashboard |
 | `lab_results` | date drawn, lab, marker, name as printed, value (number and as printed), unit, the report's range (numbers and as printed), the lab's flag, source document. One per marker, date and lab |
 | `documents` | dates, type, from (lab or brand), description, what it was applied to, notes, stored file |
 | `activity` | timestamped one-line summary of every change |
@@ -117,6 +124,10 @@ PATCH  /api/labs/:id | DELETE /api/labs/:id
 GET    /api/documents | POST {…metadata} | PATCH /:id | DELETE /:id
 PUT    /api/documents/:id/file           raw body, Content-Type + X-Filename headers
 GET    /api/documents/:id/file
+GET    /api/profile                      About me sections, care to-dos, memories
+PUT    /api/profile/:section             {value} (empty clears it)
+POST   /api/todos {title, details?, due_on?, status?} | PATCH /api/todos/:id | DELETE /api/todos/:id
+POST   /api/memories {text} | PATCH /api/memories/:id | DELETE /api/memories/:id
 GET    /api/backups | POST /api/backups
 GET    /api/backlog   | POST {title, details?} | PATCH /:id {title?, details?, status?} | DELETE /:id
 GET    /api/keys      | POST {label} → {key} (shown once) | DELETE /:id
@@ -136,9 +147,17 @@ Tools: `get_overview`, `get_day`, `get_nutrition_trends`, `list_nutrients`,
 `get_recent_changes` to read; `log_food`, `update_log_entry`, `add_food`,
 `update_food`, `add_nutrient`, `set_target`, `add_marker`, `add_marker_alias`,
 `record_lab_results` to edit; `list_documents`, `catalog_document`,
-`mark_document_filed` to file a document the chat was shown; `list_backlog`,
-`add_backlog_item` for the backlog. The filing rules are in the connector's own
-instructions, so a claude.ai chat follows them without a skill.
+`mark_document_filed` to file a document the chat was shown; `get_about_me`,
+`update_about_me`, `add_care_todo`, `update_care_todo`, `add_memory`,
+`update_memory` for About me; `list_backlog`, `add_backlog_item` for the backlog.
+The filing rules are in the connector's own instructions, so a claude.ai chat
+follows them without a skill.
+
+The instructions tell every chat to read About me first and act as the owner's
+health guide within what they've written there: steer toward the kind of care
+they want, keep their care to-dos current, and save a memory only for a lasting
+fact they shared (never lab values, document contents, date of birth, address or
+ID numbers). About me sections change only with the owner's OK.
 
 The safety model:
 

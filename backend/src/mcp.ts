@@ -3,7 +3,7 @@
 // header). The edge lets /mcp through without the Google login, so the key is
 // the only lock. Tools read the record, make safe edits (log food, save foods
 // with their sources, set targets, record lab results, keep the supplement
-// routine), file documents the chat
+// routine, keep About me, care to-dos and memories), file documents the chat
 // was shown into the catalog, and keep the app's backlog. Nothing here deletes,
 // and stored files never leave: a leaked key must not hand over lab reports.
 // Each tool calls this app's own /api, so writes get the same checks, activity
@@ -102,6 +102,10 @@ function server(): McpServer {
       "Dates are YYYY-MM-DD in their local time. Read before you write, and say what you changed. Every edit shows up in the dashboard's Log, tagged via Claude. " +
       "This record tracks; it does not diagnose. Report values against the lab's own printed range and say when one is outside it. General, sourced background about a test is fine (what it measures, how much is inherited, which markers it's read with, published guideline cutoffs, citing the source), but give no verdict on their results; for that, suggest they ask their doctor. " +
       "Ideas for improving the dashboard itself go on its backlog (add_backlog_item).\n\n" +
+      "About me: before helping with anything, call get_about_me. It holds the owner's own words (what to call them, goals, health history, care team, care preferences), their care to-dos and memories from earlier chats. " +
+      "Act as their personal health guide within what they've told you: steer toward the kind of care they want, help them prepare for appointments and follow up, and keep the to-dos current (add_care_todo when something needs doing; status 'waiting' when it's on someone else, 'done' when finished). " +
+      "Save a memory (add_memory) only for a lasting fact or preference they share that the record doesn't already hold, in one sentence; never lab values, document contents, date of birth, address or any ID number. " +
+      "Change an About me section only with their words and their OK: update_about_me replaces the whole section, so read it first and keep what's there.\n\n" +
       "Filing a document the owner shows you (a nutrition-label photo or a lab report, PDF or photo):\n" +
       "1. Read it fully. Never write their name, date of birth, address, MRN, account or accession numbers anywhere.\n" +
       "2. list_documents with unfiled_only: they upload originals on the dashboard's Documents page, so match the file you were shown by file name and date and use that id; if none matches, catalog_document without id adds an entry with no file (ask them to upload the original). " +
@@ -268,6 +272,32 @@ function server(): McpServer {
     description: "Last step of filing: record exactly what the document changed. It then shows as filed.",
     inputSchema: { id: z.number().int(), applied_to: z.string().min(3) },
   }, ({ id, applied_to }) => reply(unfiled(id).then(() => api("PATCH", `/api/documents/${id}`, { applied_to })).then(() => ({ ok: true, id, applied_to }))));
+
+  // --- about me: the owner's words, care to-dos, memories (no deletes; those are the owner's call on the dashboard) ---
+  s.registerTool("get_about_me", {
+    description: "Read this first. The owner's About me sections in their own words (name, about, goals, history, care_team, preferences), their care to-dos (open, waiting on someone, done) and the memories saved from earlier chats.",
+    annotations: { readOnlyHint: true },
+  }, () => reply(api("GET", "/api/profile")));
+  s.registerTool("update_about_me", {
+    description: "Replace one About me section with the owner's own words, only with their OK. Read get_about_me first and keep what's already there; an empty value clears the section.",
+    inputSchema: { section: z.enum(["name", "about", "goals", "history", "care_team", "preferences"]), value: z.string() },
+  }, ({ section, value }) => reply(api("PUT", `/api/profile/${section}`, { value })));
+  s.registerTool("add_care_todo", {
+    description: "Add a care to-do: an appointment to book, a letter or referral to get, a follow-up or recheck. Check get_about_me first to avoid duplicates.",
+    inputSchema: { title: z.string().min(1), details: z.string().optional(), due_on: DATE.optional(), status: z.enum(["open", "waiting", "done"]).optional().describe("waiting = it's on someone else now") },
+  }, (a) => reply(api("POST", "/api/todos", defined(a))));
+  s.registerTool("update_care_todo", {
+    description: "Change a care to-do: its wording, details, due date, or status (open, waiting on someone, done).",
+    inputSchema: { id: z.number().int(), title: z.string().optional(), details: z.string().optional(), due_on: DATE.optional(), status: z.enum(["open", "waiting", "done"]).optional() },
+  }, ({ id, ...rest }) => reply(api("PATCH", `/api/todos/${id}`, defined(rest))));
+  s.registerTool("add_memory", {
+    description: "Remember one lasting fact or preference the owner shared, in a sentence, for future chats. Not for lab values, document contents, date of birth, address or ID numbers. Check get_about_me first so it isn't a repeat.",
+    inputSchema: { text: z.string().min(1) },
+  }, ({ text }) => reply(api("POST", "/api/memories", { text })));
+  s.registerTool("update_memory", {
+    description: "Correct a saved memory's wording when the owner says it's wrong or out of date.",
+    inputSchema: { id: z.number().int(), text: z.string().min(1) },
+  }, ({ id, text }) => reply(api("PATCH", `/api/memories/${id}`, { text })));
 
   // --- the app's backlog ---
   s.registerTool("list_backlog", {

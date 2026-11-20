@@ -5,7 +5,7 @@ import { h } from "./fmt";
 export type EditOpts = {
   value: string | number | null;
   display: string;
-  type?: "number" | "text" | "date" | "select";
+  type?: "number" | "text" | "date" | "select" | "textarea";
   options?: { value: string; label: string }[];
   placeholder?: string;
   /** Highlight it as information still to fill in. */
@@ -18,8 +18,12 @@ export type EditOpts = {
 export function editable(o: EditOpts): HTMLElement {
   const span = h("span", { class: `fn-edit${o.missing ? " fn-missing" : ""}${o.empty ? " fn-edit-empty" : ""}`, tabindex: "0", title: "Click to edit" }, o.display);
   const open = () => {
-    let input: HTMLInputElement | HTMLSelectElement;
-    if (o.type === "select") {
+    let input: HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement;
+    if (o.type === "textarea") {
+      // Several lines: Enter is a new line; Cmd/Ctrl+Enter or leaving the box saves.
+      input = h("textarea", { class: "fn-input fn-textarea", rows: "4", placeholder: o.placeholder ?? "" });
+      input.value = o.value == null ? "" : String(o.value);
+    } else if (o.type === "select") {
       input = h("select", { class: "fn-input" });
       for (const opt of o.options ?? []) {
         const el = h("option", { value: opt.value }, opt.label);
@@ -53,7 +57,7 @@ export function editable(o: EditOpts): HTMLElement {
     };
     input.addEventListener("keydown", (e) => {
       const k = (e as KeyboardEvent).key;
-      if (k === "Enter") finish(true);
+      if (k === "Enter" && (o.type !== "textarea" || (e as KeyboardEvent).metaKey || (e as KeyboardEvent).ctrlKey)) finish(true);
       if (k === "Escape") finish(false);
     });
     input.addEventListener("blur", () => finish(true));

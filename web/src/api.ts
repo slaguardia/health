@@ -53,6 +53,9 @@ export type Supplement = {
   status: "taking" | "planned" | "stopped"; started_on: string | null; stopped_on: string | null; notes: string | null; created_at: string;
   url: string | null; plan_product: string | null; plan_url: string | null;
 };
+export type CareTodo = { id: number; title: string; details: string | null; due_on: string | null; status: "open" | "waiting" | "done"; source: "dashboard" | "claude"; created_at: string; done_at: string | null };
+export type Memory = { id: number; text: string; source: "dashboard" | "claude"; created_at: string; updated_at: string | null };
+export type Profile = { profile: Record<string, string>; updated: Record<string, string>; todos: CareTodo[]; memories: Memory[] };
 export type AccessKey ={ id: string; label: string; created_at: string; last_used_at: string | null };
 export type BacklogItem = { id: number; title: string; details: string | null; status: "open" | "done"; source: "dashboard" | "claude"; created_at: string; done_at: string | null };
 
@@ -79,6 +82,7 @@ export const api = {
   activity: () => get<{ activity: Activity[] }>("/api/activity").then((d) => d.activity),
   keys: () => get<{ keys: AccessKey[] }>("/api/keys").then((d) => d.keys),
   supplements: () => get<{ supplements: Supplement[] }>("/api/supplements").then((d) => d.supplements),
+  profile: () => get<Profile>("/api/profile"),
   backlog: () => get<{ backlog: BacklogItem[] }>("/api/backlog").then((d) => d.backlog),
   backups: () => get<{ backups: { name: string; size: number }[] }>("/api/backups").then((d) => d.backups),
   log: (b: { food_id: number; servings: number; date: string; meal?: Meal | null }) => send<{ id: number }>("POST", "/api/log", b),

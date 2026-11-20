@@ -174,7 +174,7 @@ td .fn-input { width: 100%; max-width: 14em; padding: 5px 8px; }
   .cap-layout { grid-template-columns: 1fr; }
   .cap-side { position: static; max-height: none; overflow: visible; flex-direction: row; align-items: center; border-right: none;
     border-bottom: 1px solid var(--hairline); padding: max(12px, env(safe-area-inset-top)) 16px 12px; }
-  .cap-nav-vert { position: fixed; z-index: 30; left: 0; right: 0; bottom: 0; display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 2px;
+  .cap-nav-vert { position: fixed; z-index: 30; left: 0; right: 0; bottom: 0; display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 2px;
     padding: 6px max(6px, env(safe-area-inset-left)) max(8px, env(safe-area-inset-bottom)); background: var(--bg); border-top: 1px solid var(--hairline); }
   .cap-nav-vert a { flex-direction: column; justify-content: center; gap: 4px; padding: 7px 0 6px; font-size: 10.5px; font-weight: 600; text-align: center; border-radius: 12px; letter-spacing: -0.01em; overflow: hidden; }
   .cap-nav-vert a span[data-short] { font-size: 0; }
@@ -396,3 +396,15 @@ a.fn-srclink:hover .fn-src { filter: brightness(1.2); }
 .fn-readwith-out { border-color: color-mix(in srgb, var(--no) 40%, transparent); }
 .fn-readwith-out b { color: var(--no); }
 .fn-about .fn-note { margin: 12px 0 0; }
+
+/* about me: the owner's own words, care to-dos, memories */
+.fn-me { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 18px 28px; }
+.fn-me .fn-edit, .fn-me-memory .fn-edit, .fn-backlog-item p .fn-edit { white-space: pre-wrap; line-height: 1.55; display: inline-block; }
+.fn-textarea { width: 100%; min-height: 90px; resize: vertical; font: inherit; line-height: 1.5; }
+.fn-me-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; }
+.fn-me-add { margin-top: 12px; flex-wrap: wrap; }
+.fn-me-add .fn-input:first-child { flex: 1 1 260px; }
+.fn-me-add input[type="date"] { flex: 0 0 auto; width: auto; }
+.fn-me-done { margin-top: 16px; }
+.fn-me-memory { grid-template-columns: minmax(0, 1fr) auto; }
+.fn-me .fn-edit-empty { color: var(--fg-faint) !important; font-style: italic; }

@@ -10,6 +10,7 @@ import { DocumentsView } from "./views/documents";
 import { LogView } from "./views/log";
 import { BacklogView } from "./views/backlog";
 import { SupplementsView } from "./views/supplements";
+import { AboutMeView } from "./views/me";
 import { startLive } from "./live";
 import { icon } from "./icons";
 
@@ -21,6 +22,7 @@ const routes: Record<string, () => View> = {
   "labs": LabsView,
   "marker/": MarkerView,
   "supplements": SupplementsView,
+  "me": AboutMeView,
   "documents": DocumentsView,
   "backlog": BacklogView,
   "log": LogView,
@@ -34,6 +36,7 @@ mountApp(routes, {
     { label: "Food", href: "#food" },
     { label: "Labs", href: "#labs" },
     { label: "Supplements", href: "#supplements" },
+    { label: "About me", href: "#me" },
     { label: "Documents", href: "#documents" },
     { label: "Backlog", href: "#backlog" },
     { label: "Log", href: "#log" },
@@ -45,13 +48,14 @@ decorateChrome();
 // Icons on the nav pills + the app icon beside the wordmark, and keep "Today" lit on
 // its routes (the shell doesn't mark the "" route as current), Food on a food, Labs on a marker.
 function decorateChrome(): void {
-  const icons: Record<string, string> = { "#": "home", "#food": "apple", "#labs": "flask", "#supplements": "pill", "#documents": "file", "#backlog": "list", "#log": "clock" };
+  const icons: Record<string, string> = { "#": "home", "#food": "apple", "#labs": "flask", "#supplements": "pill", "#me": "user", "#documents": "file", "#backlog": "list", "#log": "clock" };
   for (const a of Array.from(document.querySelectorAll<HTMLAnchorElement>(".cap-nav a"))) {
     // The label goes in a span so the phone tab bar can swap in a shorter word where it has one.
     const label = document.createElement("span");
     label.textContent = a.textContent;
     if (a.getAttribute("href") === "#documents") label.dataset.short = "Docs";
     if (a.getAttribute("href") === "#supplements") label.dataset.short = "Supps";
+    if (a.getAttribute("href") === "#me") label.dataset.short = "Me";
     a.replaceChildren(icon(icons[a.getAttribute("href") ?? ""] ?? "home", 18), label);
   }
   const brand = document.querySelector(".brand");
