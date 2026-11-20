@@ -7,7 +7,8 @@ and files it: the food goes into your library with the source of every value,
 and the lab results go onto each marker's history. The dashboard then tracks
 what you eat against targets you set, and how your bloodwork changes over time.
 
-It tracks and shows the lab's own reference ranges. It doesn't diagnose.
+It tracks and shows the lab's own reference ranges. It doesn't diagnose; each
+marker carries general, sourced background on the test, not a reading of the result.
 
 ## What you can feed it
 
@@ -34,8 +35,10 @@ is stored and backed up. Every change goes in an activity log.
   typed in) and when it was logged.
 - **Labs:** every marker grouped by panel, charted over time against the range
   printed on each result's own report (labs differ, so the band can shift from
-  draw to draw); results outside it are flagged. Each marker's page has the full
-  table and the names labs print for it.
+  draw to draw); results outside it are flagged, with the related markers that are also outside
+  theirs. Each marker's page has general background on the test (what it
+  measures, how much is inherited, what it's read with, published cutoffs, with
+  sources), the full table and the names labs print for it.
 - **Supplements:** each practitioner's plan as written (her pick, dose and link,
   and what you take in its place), then the routine by time of day (on waking, with breakfast, midday,
   with dinner, bedtime, apart from meals): each product's dose, how often,

@@ -100,7 +100,7 @@ function server(): McpServer {
     instructions:
       "Steven's personal health record: what he eats (foods with per-serving nutrients, a daily food log, targets he sets) and his bloodwork over time. " +
       "Dates are YYYY-MM-DD in his local time. Read before you write, and say what you changed. Every edit shows up in the dashboard's Log, tagged via Claude. " +
-      "This record tracks; it does not diagnose. Report values against the lab's own printed range and say when one is outside it, but don't interpret what it means medically; suggest he ask his doctor if he wants that. " +
+      "This record tracks; it does not diagnose. Report values against the lab's own printed range and say when one is outside it. General, sourced background about a test is fine (what it measures, how much is inherited, which markers it's read with, published guideline cutoffs, citing the source), but give no verdict on his results; for that, suggest he ask his doctor. " +
       "Ideas for improving the dashboard itself go on its backlog (add_backlog_item).\n\n" +
       "Filing a document Steven shows you (a nutrition-label photo or a lab report, PDF or photo):\n" +
       "1. Read it fully. Never write his name, date of birth, address, MRN, account or accession numbers anywhere.\n" +

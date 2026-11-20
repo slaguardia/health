@@ -7,7 +7,12 @@ dates of birth, imports or screenshots. Real data lives only in the running
 container's `/data` volume and its backups.
 
 It tracks and shows the lab's own reference ranges. **It doesn't diagnose**: no
-ranges of its own, no interpretation in the UI, the docs or the connector.
+ranges of its own, and no verdict on the owner's results in the UI, the docs or the
+connector. The one exception is general background per marker
+(`web/src/marker-info.ts`): what the test measures, how much is inherited, which
+markers it's read with, and published cutoffs, every claim from a cited source
+(MedlinePlus, guidelines, peer-reviewed papers). Keep it describing the test, never
+the result; check each source resolves and says what the note says before adding one.
 
 ## Filing a document the owner sends
 

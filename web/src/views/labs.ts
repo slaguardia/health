@@ -6,8 +6,10 @@ import { rangeChart, type RangePoint } from "../chart";
 import { editable, parseNum } from "../edit";
 import { icon } from "../icons";
 import { list, muted, pageHead, removeBtn, section, tile, tiles } from "../ui";
+import { MARKER_INFO, type MarkerInfo } from "../marker-info";
 
-const DISCLAIMER = "Each result is shown against the reference range printed on its own report, and flagged when it falls outside it. That's all: this page tracks numbers, it doesn't interpret them.";
+const DISCLAIMER = "Each result is shown against the reference range printed on its own report, and flagged when it falls outside it. Each marker also has general background with its sources: what it measures, how much is inherited, and what it's read with. That describes the test, not your result.";
+const INHERITED = { mostly: "Mostly inherited", partly: "Partly inherited" };
 const RANGE_WORD: Record<Range, string> = { low: "Below range", high: "Above range", flagged: "Flagged by the lab", in: "In range", unknown: "No range" };
 
 const sameUnit = (a: string | null, b: string | null) => !a || !b || a.replace(/\s/g, "").toLowerCase() === b.replace(/\s/g, "").toLowerCase();
@@ -35,7 +37,7 @@ export const LabsView = (): View => ({
         tile({ label: "Outside the report's range", value: String(last?.out_of_range.length ?? 0), icon: "bell", tone: last?.out_of_range.length ? "no" : "yes", sub: "in the latest draw" }),
         tile({ label: "Markers tracked", value: String(markers.filter((m) => m.count).length), icon: "list", tone: "accent", sub: `${draws.length} draw${draws.length === 1 ? "" : "s"} on file` }),
       ),
-      last ? section(h("span", {}, icon("bell", 16), ` Outside the range in the ${day(last.drawn_on)} draw`), outList(last)) : "",
+      last ? section(h("span", {}, icon("bell", 16), ` Outside the range in the ${day(last.drawn_on)} draw`), outList(last, markers)) : "",
       ...[...panels].map(([panel, ms]) => section(panel, h("div", { class: "fn-markers" }, ...ms.map(markerCard)))),
       draws.length > 1 ? section("Every draw", table({
         columns: ["Drawn", "Lab", "Results", "Outside range"],
@@ -45,11 +47,17 @@ export const LabsView = (): View => ({
   },
 });
 
-function outList(d: Draw): HTMLElement {
-  return list(d.out_of_range.map((r) => h("span", { class: "fn-li" },
-    h("span", {}, h("a", { href: `#marker/${r.marker_id}` }, r.marker), h("small", {}, RANGE_WORD[r.range as Range] ?? r.range)),
-    h("b", { class: "fn-num fn-out" }, `${r.value_text ?? num(r.value)} ${r.unit ?? ""}`, h("small", {}, r.ref_text ? `range ${r.ref_text}` : "")))),
-    "Every result is within its printed range.");
+/** Each result outside its range, and which of the markers it's read with are outside theirs too. */
+function outList(d: Draw, markers: Marker[]): HTMLElement {
+  const out = new Set(d.out_of_range.map((r) => r.marker_id));
+  const name = (id: string) => markers.find((m) => m.id === id)?.name ?? id;
+  return list(d.out_of_range.map((r) => {
+    const also = (MARKER_INFO[r.marker_id]?.readWith ?? []).filter((id) => out.has(id));
+    return h("span", { class: "fn-li" },
+    h("span", {}, h("a", { href: `#marker/${r.marker_id}` }, r.marker), h("small", {}, RANGE_WORD[r.range as Range] ?? r.range,
+      also.length ? ` · read with ${also.map(name).join(", ")}, also outside` : "")),
+    h("b", { class: "fn-num fn-out" }, `${r.value_text ?? num(r.value)} ${r.unit ?? ""}`, h("small", {}, r.ref_text ? `range ${r.ref_text}` : "")));
+  }), "Every result is within its printed range.");
 }
 
 const points = (rs: { drawn_on: string; value: number | null; unit: string | null; ref_low: number | null; ref_high: number | null; out_of_range: boolean; ref_text?: string | null; lab?: string }[], unit: string | null): RangePoint[] =>
@@ -64,7 +72,8 @@ function markerCard(m: Marker): HTMLElement {
   const pts = points(m.history, m.unit);
   return h("a", { class: `fn-marker${l.out_of_range ? " fn-marker-out" : ""}`, href: `#marker/${m.id}` },
     h("div", { class: "fn-marker-head" },
-      h("span", {}, h("b", {}, m.name), h("small", {}, `${day(l.drawn_on)}${l.lab ? ` · ${l.lab}` : ""}`)),
+      h("span", {}, h("b", {}, m.name), h("small", {}, `${day(l.drawn_on)}${l.lab ? ` · ${l.lab}` : ""}`),
+        MARKER_INFO[m.id]?.inherited ? h("small", { class: "fn-gene" }, INHERITED[MARKER_INFO[m.id].inherited!]) : null),
       h("span", { class: "fn-marker-val" }, h("b", { class: "fn-num" }, shown(l)), ` ${l.unit ?? ""}`,
         h("small", { class: l.out_of_range ? "fn-out" : "" }, l.out_of_range ? RANGE_WORD[l.range] : l.ref_text ? `range ${l.ref_text}` : RANGE_WORD[l.range]))),
     pts.length ? rangeChart(pts, { height: 120 }) : muted("Text result, nothing to chart."),
@@ -76,13 +85,14 @@ function markerCard(m: Marker): HTMLElement {
 export const MarkerView = (): View => ({
   async mount(el) {
     const id = decodeURIComponent(location.hash.match(/^#marker\/(.+)$/)?.[1] ?? "");
-    const { marker: m, results } = await api.marker(id);
+    const [{ marker: m, results }, markers] = await Promise.all([api.marker(id), api.markers()]);
     const patch = (body: object) => send("PATCH", `/api/markers/${encodeURIComponent(id)}`, body);
     const pts = points(results, m.unit);
     const other = results.filter((r) => r.value != null && !sameUnit(r.unit, m.unit));
     el.replaceChildren(
       h("a", { class: "fn-back", href: "#labs" }, icon("left", 14), " Labs"),
       pageHead(m.name, DISCLAIMER),
+      MARKER_INFO[id] ? about(MARKER_INFO[id], markers) : "",
       section(h("span", {}, "History", m.unit ? h("small", { class: "fn-muted" }, ` in ${m.unit}`) : ""),
         pts.length ? rangeChart(pts, { height: 240 }) : muted("No numeric results to chart."),
         h("p", { class: "fn-muted fn-legendline" }, h("i", { class: "fn-range-key" }), " The range printed on each report", h("i", { class: "fn-out-key" }), " Outside it"),
@@ -101,6 +111,22 @@ export const MarkerView = (): View => ({
     );
   },
 });
+
+/** General background on the test, with what it's read with (and their latest results) and the sources. */
+function about(info: MarkerInfo, markers: Marker[]): HTMLElement {
+  const related = (info.readWith ?? []).map((rid) => markers.find((x) => x.id === rid)).filter((x): x is Marker => !!x?.latest);
+  return section("What this test is",
+    h("div", { class: "fn-about" },
+      h("p", {}, info.what),
+      info.genes ? h("p", {}, h("b", {}, info.inherited ? `${INHERITED[info.inherited]}. ` : "Inherited factors. "), info.genes) : null,
+      info.context ? h("p", {}, info.context) : null,
+      related.length ? h("div", { class: "fn-readwith" }, h("span", {}, "Read it with"),
+        ...related.map((x) => h("a", { class: `fn-readwith-chip${x.latest!.out_of_range ? " fn-readwith-out" : ""}`, href: `#marker/${x.id}` },
+          x.name, h("b", { class: "fn-num" }, ` ${shown(x.latest!)} ${x.latest!.unit ?? ""}`)))) : null,
+      h("details", { class: "fn-sources" }, h("summary", {}, `Sources (${info.sources.length})`),
+        h("ol", {}, ...info.sources.map((src) => h("li", {}, h("a", { href: src.url, target: "_blank", rel: "noopener" }, src.title))))),
+      h("p", { class: "fn-muted fn-note" }, "General background from the sources above, not a reading of your results.")));
+}
 
 const fact = (label: string, v: Node) => h("div", { class: "fn-fact" }, h("span", {}, label), v);
 

@@ -379,3 +379,20 @@ a.fn-srclink:hover .fn-src { filter: brightness(1.2); }
 .fn-supp-fold:not([open]) > summary h2 { margin-bottom: 0; }
 .fn-supp-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--slot); flex: none; }
 .fn-supp-count { font-size: 12.5px; font-weight: 600; color: var(--slot); background: color-mix(in srgb, var(--slot) 14%, transparent); border-radius: 999px; padding: 1px 8px; }
+
+/* marker background: what the test is, what it's read with, sources */
+.fn-about p { margin: 0 0 12px; line-height: 1.6; max-width: 75ch; color: var(--fg); font-size: 14.5px; }
+.fn-about p b { font-weight: 650; }
+.fn-readwith { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 4px 0 14px; }
+.fn-readwith > span { color: var(--fg-faint); font-size: 12.5px; margin-right: 2px; }
+.fn-readwith-chip { padding: 6px 11px; border-radius: 999px; background: var(--bg); border: 1px solid transparent; color: var(--fg); text-decoration: none; font-size: 13px; }
+.fn-readwith-chip:hover { border-color: var(--border); }
+.fn-readwith-chip b { font-weight: 600; color: var(--fg-muted); }
+.fn-sources summary { cursor: pointer; color: var(--fg-muted); font-size: 13px; }
+.fn-sources ol { margin: 8px 0 0; padding-left: 20px; font-size: 13px; line-height: 1.55; }
+.fn-sources a { color: var(--link); text-decoration: none; }
+.fn-sources a:hover { text-decoration: underline; }
+.fn-gene { color: var(--accent) !important; font-weight: 600; }
+.fn-readwith-out { border-color: color-mix(in srgb, var(--no) 40%, transparent); }
+.fn-readwith-out b { color: var(--no); }
+.fn-about .fn-note { margin: 12px 0 0; }
