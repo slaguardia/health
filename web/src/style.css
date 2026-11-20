@@ -355,6 +355,8 @@ a.fn-srclink:hover .fn-src { filter: brightness(1.2); }
 /* every routine table gets the same columns, so they line up from one time of day to the next */
 .fn-supp-table .tk-table { table-layout: fixed; width: 100%; min-width: 760px; }
 .fn-supp-table .tk-table td { vertical-align: top; }
+/* Headers sit on the tinted card (no toolkit band), underlined in the section's color. */
+.fn-supp-table .tk-table thead th { background: transparent; color: var(--fg-muted); font-weight: 600; font-size: 12px; padding-top: 2px; border-bottom: 1px solid color-mix(in srgb, var(--slot, var(--fg-muted)) 40%, transparent); }
 .fn-supp-routine th:nth-child(1) { width: 30%; }
 .fn-supp-routine th:nth-child(2) { width: 11%; }
 .fn-supp-routine th:nth-child(3) { width: 12%; }
