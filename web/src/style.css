@@ -364,3 +364,18 @@ a.fn-srclink:hover .fn-src { filter: brightness(1.2); }
 .fn-supp-table:not(.fn-supp-routine) .tk-table { min-width: 560px; }
 .fn-supp-table:not(.fn-supp-routine) th:nth-child(1) { width: 50%; }
 .fn-supp-table:not(.fn-supp-routine) th:nth-child(2) { width: 18%; }
+/* each time of day gets its own tint, morning warm to night cool, and folds away */
+.fn-supp-fold { --slot: var(--fg-muted); border-left: 3px solid var(--slot); background: color-mix(in srgb, var(--slot) 5%, var(--card)); }
+.fn-slot-waking { --slot: var(--maybe); }
+.fn-slot-breakfast { --slot: color-mix(in srgb, var(--maybe) 50%, var(--no)); }
+.fn-slot-midday { --slot: var(--yes); }
+.fn-slot-dinner { --slot: var(--link); }
+.fn-slot-bedtime { --slot: var(--accent); }
+.fn-slot-apart { --slot: color-mix(in srgb, var(--yes) 50%, var(--link)); }
+.fn-supp-fold > summary { list-style: none; cursor: pointer; }
+.fn-supp-fold > summary::-webkit-details-marker { display: none; }
+.fn-supp-fold > summary h2::after { content: "›"; margin-left: auto; color: var(--fg-faint); font-size: 20px; line-height: 1; transition: transform var(--dur-fast) var(--ease); }
+.fn-supp-fold[open] > summary h2::after { transform: rotate(90deg); }
+.fn-supp-fold:not([open]) > summary h2 { margin-bottom: 0; }
+.fn-supp-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--slot); flex: none; }
+.fn-supp-count { font-size: 12.5px; font-weight: 600; color: var(--slot); background: color-mix(in srgb, var(--slot) 14%, transparent); border-radius: 999px; padding: 1px 8px; }

@@ -28,7 +28,7 @@ export const SupplementsView = (): View => ({
       ...plans(current),
       ...WHEN.map((w) => {
         const rows = current.filter((s) => s.timing === w.value);
-        return rows.length ? section(w.label, routine(rows)) : "";
+        return rows.length ? fold(w.value, w.label, rows.length, routine(rows)) : "";
       }),
       current.length ? "" : section("Your routine", h("p", { class: "fn-empty" }, icon("pill", 16), " Nothing yet. Add what you take below.")),
       addForm(),
@@ -37,6 +37,22 @@ export const SupplementsView = (): View => ({
     );
   },
 });
+
+/** Collapsed sections, remembered on this device so a live re-render doesn't reopen them. */
+const CLOSED = "health.supplements.closed";
+const closed = (): string[] => { try { return JSON.parse(localStorage.getItem(CLOSED) ?? "[]"); } catch { return []; } };
+
+/** A card that folds away, tinted by its time of day. */
+function fold(key: string, title: string, count: number, ...body: Node[]): HTMLElement {
+  const d = h("details", { class: `fn-card fn-supp-fold fn-slot-${key}` },
+    h("summary", {}, h("h2", {}, h("i", { class: "fn-supp-dot" }), title, h("span", { class: "fn-supp-count" }, String(count)))), ...body);
+  d.open = !closed().includes(key);
+  d.addEventListener("toggle", () => {
+    const keep = closed().filter((k) => k !== key);
+    try { localStorage.setItem(CLOSED, JSON.stringify(d.open ? keep : [...keep, key])); } catch { /* storage blocked: folds just won't persist */ }
+  });
+  return d;
+}
 
 const patch = (s: Supplement, body: object) => send("PATCH", `/api/supplements/${s.id}`, body);
 const text = (s: Supplement, key: keyof Supplement, placeholder = "—") =>
@@ -51,7 +67,7 @@ function plans(list: Supplement[]): HTMLElement[] {
   const by = new Map<string, Supplement[]>();
   for (const s of list) if (s.recommended_by) by.set(s.recommended_by, [...(by.get(s.recommended_by) ?? []), s]);
   const slot = (s: Supplement) => WHEN.findIndex((w) => w.value === s.timing);
-  return [...by].map(([who, items]) => section(`${who}'s plan`, h("div", { class: "fn-supp-table" }, table({
+  return [...by].map(([who, items], i) => fold(`plan-${i}`, `${who}'s plan`, items.length, h("div", { class: "fn-supp-table" }, table({
     columns: ["Recommended", "When", "What you take"],
     rows: items.sort((a, b) => slot(a) - slot(b)).map((s) => [
       s.plan_product
